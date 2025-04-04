@@ -6,7 +6,7 @@ TOPIC_VALIDATED = "validated_orders"
 TOPIC_NOTIFICATIONS = "notifications"
 
 consumer = KafkaConsumer(
-    TOPIC_VALIDATED, 
+    TOPIC_VALIDATED,
     bootstrap_servers=KAFKA_BROKER
 )
 
@@ -15,16 +15,25 @@ producer = KafkaProducer(
 )
 
 for message in consumer:
-    order = json.loads(message.value.decode("utf-8"))
-    if order["status"] == "Available":
-        print(f"Processing payment for {order['customer']} - {order['book']} using {order['payment_option']}")
-        payment_status = "Payment Confirmed"
-    else:
-        print(f"Payment failed for {order['customer']} - {order['book']}")
-        payment_status = "Payment Failed"
+    try:
+        order = json.loads(message.value.decode("utf-8"))
+        if not all(key in order for key in ["customer", "book", "status", "payment_option"]):
+            print("Skipping invalid payment message")
+            continue
 
-    notification = {
-        "customer": order["customer"], 
-        "message": payment_status
-    }
-    producer.send(TOPIC_NOTIFICATIONS, json.dumps(notification).encode("utf-8"))
+        if order["status"] == "Available":
+            print(f"Processing payment for {order['customer']}, Book Title {order['book']} using Payment option: {order['payment_option']}")
+            payment_status = "Payment Confirmed"
+        else:
+            print(f"Payment failed for {order['customer']}, Book Title {order['book']} (Status: {order['status']})")
+            payment_status = "Payment Failed"
+
+        notification = {
+            "customer": order["customer"],
+            "message": payment_status
+        }
+
+        producer.send(TOPIC_NOTIFICATIONS, json.dumps(notification).encode("utf-8"))
+
+    except Exception as e:
+        print(f"Error in payment consumer: {e}")
