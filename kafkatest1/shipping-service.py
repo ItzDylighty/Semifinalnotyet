@@ -6,9 +6,7 @@ TOPIC_VALIDATED = "validated_orders"
 
 consumer = KafkaConsumer(
     TOPIC_VALIDATED, 
-    bootstrap_servers=KAFKA_BROKER,
-    group_id="shipping-group",
-    auto_offset_reset="earliest"
+    bootstrap_servers=KAFKA_BROKER
 )
 
 for message in consumer:

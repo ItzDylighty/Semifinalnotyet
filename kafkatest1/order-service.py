@@ -12,13 +12,13 @@ producer = KafkaProducer(
 )
 
 @app.post("/place_order/")
-def place_order(book_id: int, quantity: int, customer: str):
-
-    order = {"book_id": book_id, 
-             "quantity": quantity, 
-             "customer": customer
-             }
-    
+def place_order(book_id: int, quantity: int, customer: str, payment_option: str):
+    order = {
+        "book_id": book_id, 
+        "quantity": quantity, 
+        "customer": customer, 
+        "payment_option": payment_option 
+    }
     producer.send(TOPIC_ORDERS, json.dumps(order).encode("utf-8"))
     return {"message": "Order placed successfully"}
 
